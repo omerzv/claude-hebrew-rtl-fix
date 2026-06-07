@@ -72,14 +72,16 @@ bdi.hbf-bdi {
 }
 
 /* Composer (contenteditable) direction — set by content_script via the
-   data-hbf-composer marker. Direction only; NO unicode-bidi overrides
-   inside an editable (caret-safety with ProseMirror). */
+   data-hbf-composer marker. NO unicode-bidi overrides inside an editable
+   (caret-safety with ProseMirror). `direction` needs no !important
+   (frameworks rarely set it); `text-align` gets it to out-cascade
+   same-specificity Tailwind utilities, matching the data-hbf-dir rules. */
 [data-hbf-composer='rtl'] {
   direction: rtl;
-  text-align: right;
+  text-align: right !important;
 }
 
 [data-hbf-composer='ltr'] {
   direction: ltr;
-  text-align: left;
+  text-align: left !important;
 }
