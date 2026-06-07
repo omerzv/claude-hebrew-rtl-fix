@@ -54,8 +54,8 @@ Two layers, both implemented in `bidi_processor.js` (pure, testable logic):
 | ------------------- | --------------------------------------------------------------- |
 | `manifest.json`     | MV3 manifest; content script on `https://claude.ai/*` only      |
 | `bidi_processor.js` | Pure detection/segmentation/wrapping logic (Node-testable)      |
-| `content_script.js` | MutationObserver orchestration, streaming handling, toggle UI   |
-| `styles.css`        | Toggle button styling + RTL alignment/code-block CSS            |
+| `content_script.js` | MutationObserver orchestration, streaming handling, composer direction, toggle UI |
+| `styles.css`        | Toggle button, RTL alignment, code-block, and composer CSS      |
 | `test_bidi.js`      | Unit tests for the pure logic — `node test_bidi.js`             |
 
 ### Resilience to Claude.ai DOM changes
@@ -83,8 +83,9 @@ the extension itself are filtered out to prevent feedback loops.
 
 ### Safety constraints
 
-- Nothing inside `[contenteditable]`, `textarea`, or `input` is ever touched
-  — the composer is left alone.
+- `textarea` and `input` elements are never touched. For `[contenteditable]`,
+  only `dir`/`data-hbf-composer` attributes are set on the element itself;
+  its content and children are never modified.
 - The toggle button is parented on `<html>`, *outside* React's root, so
   reconciliation can never remove it and we never corrupt Claude's vdom.
 - Only `storage` permission (persisting the toggle state); no host
