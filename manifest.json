@@ -29,7 +29,7 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "hebrew-bidi-fixer@omerzv33.github.io",
+      "id": "hebrew-bidi-fixer@omerzv.github.io",
       "strict_min_version": "115.0"
     }
   }
