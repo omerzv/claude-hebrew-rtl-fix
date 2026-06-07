@@ -116,6 +116,26 @@ toggle the fix on/off live — disabling unwraps every `<bdi>` and removes all
 `dir` attributes, restoring the page exactly as it was. The state persists
 across reloads via `chrome.storage.local`.
 
+## Composer (input box) direction
+
+As of v1.1 the fix also applies to text you type. The composer's direction
+is decided by the same strong-character counting used for messages,
+re-evaluated 150 ms after each keystroke, with **hysteresis**: once a
+direction is established it only flips when the other script takes a lead
+of 3+ letters — so alignment doesn't jitter while counts hover near 50/50.
+Only `dir` attributes are set; the editor's content is never modified.
+The א/A button governs this too: toggling off restores native behavior.
+
+### Manual test checklist
+
+1. Type Hebrew into the composer → it right-aligns after the first letter.
+2. Keep typing a mostly-Hebrew sentence with an English word → stays RTL.
+3. Delete down to English-majority gradually → no flicker at the
+   crossover; flips to LTR only once English clearly leads.
+4. Toggle the א/A button off → composer returns to native (LTR) behavior;
+   on → corrects again on the next keystroke.
+5. Messages still render as before (regression check).
+
 ## Testing the pure logic
 
 ```sh
