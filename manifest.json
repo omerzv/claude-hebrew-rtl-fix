@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Claude.ai Hebrew Bidi Fixer",
   "version": "1.1.0",
-  "description": "Fixes Hebrew-English bidirectional text rendering in Claude.ai assistant messages. Fully client-side, no network requests.",
+  "description": "Fixes Hebrew-English bidirectional text rendering in Claude.ai messages and composer. Fully client-side, no network requests.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
