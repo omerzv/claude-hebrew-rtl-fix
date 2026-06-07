@@ -5,8 +5,17 @@
   "description": "Fixes Hebrew-English bidirectional text rendering in Claude.ai assistant messages. Fully client-side, no network requests.",
   "icons": {
     "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Claude.ai Hebrew Bidi Fixer",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
   },
   "permissions": ["storage"],
   "host_permissions": [],
@@ -20,7 +29,7 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "hebrew-bidi-fixer@example.com",
+      "id": "hebrew-bidi-fixer@omerzv33.github.io",
       "strict_min_version": "115.0"
     }
   }
