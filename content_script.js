@@ -53,6 +53,7 @@
     'p, li, ul, ol, h1, h2, h3, h4, h5, h6, td, th, blockquote';
 
   const DEBOUNCE_MS = 200; // rides out React streaming churn (see README)
+  const COMPOSER_DEBOUNCE_MS = 150; // per spec §2
 
   // ---------------------------------------------------------------------
   // State
@@ -65,6 +66,13 @@
   // Blocks already bdi-wrapped (final pass done). WeakSet so React swapping
   // nodes out never leaks memory. Recreated on disable (see setEnabled).
   let finalized = new WeakSet();
+
+  // Per-editable previous direction (hysteresis state). Keyed by element so
+  // every contenteditable on the page tracks independently; recreated on
+  // toggle-off (see setEnabled).
+  let composerDirs = new WeakMap();
+  let composerDebounce = null;
+  let composerErrorLogged = false;
 
   // ---------------------------------------------------------------------
   // Core processing
@@ -130,6 +138,70 @@
   }
 
   // ---------------------------------------------------------------------
+  // Composer (contenteditable) direction — spec §2
+  // ---------------------------------------------------------------------
+
+  // Document-level delegation: input events bubble from any contenteditable,
+  // so we never track the composer's lifecycle and React churn can't hurt us.
+  function handleComposerInput(event) {
+    try {
+      const t = event.target;
+      const editor =
+        t && t.nodeType === 1 && t.closest
+          ? t.closest('[contenteditable="true"]')
+          : null;
+      if (!editor) return;
+      clearTimeout(composerDebounce);
+      composerDebounce = setTimeout(
+        () => updateComposerDir(editor),
+        COMPOSER_DEBOUNCE_MS
+      );
+    } catch (err) {
+      // Never block typing; log once.
+      if (!composerErrorLogged) {
+        composerErrorLogged = true;
+        console.warn('[hebrew-bidi-fixer] composer handler error:', err);
+      }
+    }
+  }
+
+  // Attribute-only, always: we set dir/marker on the editable element and
+  // never touch its children — ProseMirror owns that DOM. If the framework
+  // strips the attribute, the next input event re-applies it (self-healing).
+  function updateComposerDir(editor) {
+    if (!enabled || !editor.isConnected) return;
+    const prev = composerDirs.get(editor) || null;
+    const dir = BP.decideComposerDir(editor.textContent || '', prev);
+    if (dir) {
+      composerDirs.set(editor, dir);
+      if (editor.getAttribute('dir') !== dir) editor.setAttribute('dir', dir);
+      if (editor.getAttribute('data-hbf-composer') !== dir) {
+        editor.setAttribute('data-hbf-composer', dir);
+      }
+    } else {
+      composerDirs.delete(editor);
+      editor.removeAttribute('dir');
+      editor.removeAttribute('data-hbf-composer');
+    }
+  }
+
+  function attachComposerListener() {
+    document.addEventListener('input', handleComposerInput, true);
+  }
+
+  function detachComposerListener() {
+    document.removeEventListener('input', handleComposerInput, true);
+    clearTimeout(composerDebounce);
+  }
+
+  function revertComposers() {
+    document.querySelectorAll('[data-hbf-composer]').forEach((el) => {
+      el.removeAttribute('dir');
+      el.removeAttribute('data-hbf-composer');
+    });
+  }
+
+  // ---------------------------------------------------------------------
   // MutationObserver
   // ---------------------------------------------------------------------
 
@@ -178,13 +250,17 @@
     enabled = on;
     if (on) {
       startObserver();
+      attachComposerListener();
       processAll();
     } else {
       stopObserver();
+      detachComposerListener();
       BP.revert(document.body);
+      revertComposers();
       // revert() unwrapped every <bdi> and cleared the dir markers; reset
-      // the gate so a re-enable runs the full wrap pass again.
+      // the gates so a re-enable runs the full passes again.
       finalized = new WeakSet();
+      composerDirs = new WeakMap();
     }
     updateToggleUi();
     if (persist) {
@@ -234,6 +310,7 @@
     injectToggle();
     if (enabled) {
       startObserver();
+      attachComposerListener();
       processAll();
     }
     updateToggleUi();
