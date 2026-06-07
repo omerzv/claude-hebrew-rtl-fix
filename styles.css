@@ -1,0 +1,72 @@
+/* Claude.ai Hebrew Bidi Fixer — injected UI + bidi support styles. */
+
+/* ------------------------------------------------------------------ */
+/* Floating toggle button (parented on <html>, outside React's tree). */
+/* ------------------------------------------------------------------ */
+.hbf-toggle {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  z-index: 2147483646; /* above app chrome, below devtools overlays */
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: #c96442; /* Claude accent-adjacent */
+  color: #fff;
+  font: 600 13px/1 system-ui, sans-serif;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  opacity: 0.85;
+}
+
+.hbf-toggle:hover {
+  opacity: 1;
+  transform: scale(1.06);
+}
+
+.hbf-toggle.hbf-off {
+  background: #6b6b6b;
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+/* ------------------------------------------------------------------ */
+/* Bidi rendering support.                                            */
+/* ------------------------------------------------------------------ */
+
+/* RTL-detected blocks: right-align text. !important is safe here — the
+   rules are scoped to our own marker attribute, so nothing else on the
+   page is affected, and Claude's Tailwind utilities (`text-left` etc.)
+   would otherwise out-cascade a plain attribute selector. */
+[data-hbf-dir='rtl'] {
+  text-align: right !important;
+}
+
+[data-hbf-dir='ltr'] {
+  text-align: left !important;
+}
+
+/* Claude's markdown lists use physical left padding for bullets/numbers
+   (Tailwind pl-*); mirror it when the whole list is RTL so markers sit
+   on the right. */
+ul[data-hbf-dir='rtl'],
+ol[data-hbf-dir='rtl'] {
+  padding-right: 1.5em !important;
+  padding-left: 0 !important;
+}
+
+/* Inline isolates we create — explicit isolation even if an ancestor
+   sets unicode-bidi differently. */
+bdi.hbf-bdi {
+  unicode-bidi: isolate;
+}
+
+/* Code is always LTR regardless of the block direction we set. */
+[data-hbf-dir='rtl'] code,
+[data-hbf-dir='rtl'] pre {
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: left;
+}
