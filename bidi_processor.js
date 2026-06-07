@@ -208,6 +208,28 @@
   }
 
   /**
+   * Decide the direction of a composer/contenteditable as the user types.
+   * Same strong-character counting as messages, plus HYSTERESIS: once a
+   * direction is established (`prevDir`), it only flips when the opposing
+   * script's count exceeds the current one by at least `margin`. This
+   * prevents alignment jitter while counts hover near 50/50 mid-typing.
+   *
+   * @param {string} text             full text of the editable
+   * @param {'rtl'|'ltr'|null} prevDir previously applied direction, if any
+   * @param {number} [margin=3]       strong-char lead required to flip
+   * @returns {'rtl'|'ltr'|null} null when there are no strong chars at all
+   *   (caller should remove dir and reset its prevDir state)
+   */
+  function decideComposerDir(text, prevDir, margin) {
+    if (margin === undefined) margin = 3;
+    const { rtl, ltr } = countStrong(text);
+    if (rtl === 0 && ltr === 0) return null;
+    if (!prevDir) return rtl >= ltr ? 'rtl' : 'ltr';
+    if (prevDir === 'rtl') return ltr >= rtl + margin ? 'ltr' : 'rtl';
+    return rtl >= ltr + margin ? 'rtl' : 'ltr';
+  }
+
+  /**
    * Undo everything this processor did inside `root`: remove dir markers
    * and unwrap our <bdi> elements back into plain text.
    */
@@ -233,6 +255,7 @@
     applyBlockDirection,
     wrapMinorityRuns,
     processBlock,
+    decideComposerDir,
     revert,
   };
 

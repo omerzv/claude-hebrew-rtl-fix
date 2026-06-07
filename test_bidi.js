@@ -106,6 +106,19 @@ eq(
   'minority run at string start'
 );
 
+console.log('decideComposerDir');
+eq(B.decideComposerDir('ש', null), 'rtl', 'first Hebrew char sets rtl immediately');
+eq(B.decideComposerDir('a', null), 'ltr', 'first Latin char sets ltr immediately');
+eq(B.decideComposerDir('', null), null, 'empty → null');
+eq(B.decideComposerDir('123 !?', 'rtl'), null, 'neutrals only → null even with prev');
+eq(B.decideComposerDir('שש abcd', 'rtl'), 'rtl', 'prev rtl, ltr leads by 2 (<margin 3) → keeps rtl');
+eq(B.decideComposerDir('שש abcde', 'rtl'), 'ltr', 'prev rtl, ltr leads by 3 (=margin) → flips to ltr');
+eq(B.decideComposerDir('ab ששש', 'ltr'), 'ltr', 'prev ltr, rtl leads by 1 (<margin) → keeps ltr');
+eq(B.decideComposerDir('ab ששששש', 'ltr'), 'rtl', 'prev ltr, rtl leads by 3 (=margin) → flips to rtl');
+eq(B.decideComposerDir('שa', null), 'rtl', 'no prev, exact tie → rtl bias (consistent with messages)');
+eq(B.decideComposerDir('שש a', 'rtl', 1), 'rtl', 'custom margin respected (ltr behind, stays)');
+eq(B.decideComposerDir('ש aa', 'rtl', 1), 'ltr', 'custom margin 1: ltr leads by 1 → flips');
+
 console.log('idempotency / reconstruction');
 {
   const input = 'טקסט עם some English v2 וגם C++ בסוף';
